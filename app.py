@@ -9,12 +9,14 @@ footer = """
 <p style='text-align: center; color: gray;'>Made with inspiration by Om A. Soni</p>
 """
 
-shlok_keys = ['Title', 'Chapter', 'Verse', 'Enlgish Translation']
+shlok_keys = ['Title', 'Chapter', 'Verse', 'Hindi Anuvad' , 'Enlgish Translation']
+max_line_length = 80  # Adjust as needed
 
 @st.cache_resource
 def load_data():
    hn_filepath = 'Gita.xlsx'
    return pd.read_excel(hn_filepath)
+
 
 @st.cache_resource
 def load_hn_model():
@@ -35,9 +37,14 @@ def build_annoy_index(shloka_embeddings):
    annoy_index.build(18) # 18 trees for faster search
    return annoy_index
 
+def wrap_text(text):
+   pass
 # st.write("shree ganeshay namah")
 
 hn_data = load_data()
+
+
+
 shloka_embeddings = build_embeddings(hn_data)
 annoy_index = build_annoy_index(shloka_embeddings)
 
@@ -45,7 +52,26 @@ st.title("TopShlok Bhagavad Gita Assistant")
 
 st.markdown(footer, unsafe_allow_html=True)
 
-   
+st.markdown(
+    """
+    <style>
+        .reportview-container {
+            width: 90%;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown(
+    """
+    <style>
+        .streamlit-text-container {
+            white-space: pre-line;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 query = st.text_input("Ask any question related to the Bhagavad Gita: ")
 
 if st.button('Ask'):
@@ -59,7 +85,7 @@ if st.button('Ask'):
     similarities = []
     for curr_index in similar_indices:
         similarity = util.cos_sim(query_embedding, shloka_embeddings[curr_index])
-        curr_shlok_details = {key: hn_data[key][curr_index] for key in shlok_keys}
+        curr_shlok_details = {key: hn_data[key][curr_index] for key in hn_data}
         similarities.append({"shlok_details": curr_shlok_details, "similarity": similarity})
 
     # Get the most similar Shloka
@@ -71,10 +97,11 @@ if st.button('Ask'):
     st.write("------------------------------")
     st.write(f"{top_shlok_details['Chapter']} , Shloka : {shlok_number}")
 
-    meaning_text = top_shlok_details['Enlgish Translation']
-    max_line_length = 80  # Adjust as needed
-
-    wrapped_text = textwrap.fill(meaning_text, width=max_line_length)
+    
+    
+    
+    wrapped_text = textwrap.fill(top_shlok_details['Enlgish Translation'], width=max_line_length)
+    wrapped_hindi_text=textwrap.fill(top_shlok_details['Hindi Anuvad'], width=max_line_length)
 
     placeholder = st.empty()
 
@@ -82,7 +109,16 @@ if st.button('Ask'):
     for char in wrapped_text:
       prev_text=prev_text+char
       placeholder.text(prev_text)
-      time.sleep(0.02)  # Adjust the sleep duration as needed
+      time.sleep(0.01)  # Adjust the sleep duration as needed
+    st.write("\n------------------------------")
+
+    hindi_placeholder = st.empty()
+
+    hindi_text=''
+    for char in wrapped_hindi_text :
+      hindi_text=hindi_text+char
+      hindi_placeholder.text(hindi_text)
+      time.sleep(0.005)  # Adjust the sleep duration as needed
     st.write("\n------------------------------")
 
 
